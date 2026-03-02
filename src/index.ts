@@ -34,7 +34,7 @@ export default class Trustless {
    * @param connectorId - Caller identifier
    * @returns 197-char hex HashId
    */
-  static getHash(connectorId: Types.ConnectorId): Types.HashId {
+  static generate(connectorId: Types.ConnectorId): Types.HashId {
     const nonce = String(Date.now()) + String(Math.random())
     return Cipher.generateHash(String(connectorId).trim() + nonce)
   }
@@ -63,7 +63,7 @@ export default class Trustless {
   /**
    * Build requestId for hashId and optional window.
    * @description Validates hashId then encodes with current slot and window.
-   * @param hashId - 197-char hex from getHash
+   * @param hashId - 197-char hex from generate
    * @param expireTime - Optional window seconds (default 10)
    * @returns RequestId string or empty when hashId invalid
    */
@@ -98,10 +98,13 @@ export default class Trustless {
     const actualCode = typeof secret === 'number'
       ? secret
       : parseInt(String(secret).replace(/\D/g, ''), 10)
-    if (Number.isNaN(actualCode)) {
+    if (Number.isNaN(actualCode) || !Number.isInteger(actualCode)) {
       return false
     }
-    return expectedCode >>> 0 === actualCode >>> 0
+    if (actualCode < 0 || actualCode > 1e10) {
+      return false
+    }
+    return expectedCode === actualCode
   }
 }
 

@@ -1,7 +1,7 @@
 {
   "name": "@neabyte/trustless-id",
   "version": "0.1.0",
-  "description": "Trustless ID",
+  "description": "Time-bound anonymous ID: request, decode, verify. No server",
   "type": "module",
   "main": "dist/index.cjs",
   "module": "dist/index.mjs",
@@ -19,8 +19,25 @@
     "prepublishOnly": "rm -rf dist && npm run build"
   },
   "keywords": [
+    "anonymous-id",
+    "client-side",
+    "connector",
+    "deno",
+    "esm",
+    "handshake",
+    "javascript",
+    "library",
+    "no-server",
+    "nodejs",
+    "one-time-code",
+    "pairing",
+    "session-id",
+    "time-bound",
     "trustless",
-    "anonymous-id"
+    "typescript",
+    "verification",
+    "verification-code",
+    "zero-dependency"
   ],
   "dependencies": {},
   "devDependencies": {

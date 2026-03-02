@@ -1,6 +1,6 @@
 {
   "name": "@neabyte/trustless-id",
-  "description": "Trustless ID",
+  "description": "Time-bound anonymous ID: request, decode, verify. No server",
   "version": "0.1.0",
   "type": "module",
   "license": "MIT",

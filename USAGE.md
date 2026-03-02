@@ -16,19 +16,21 @@ API, flow, options — request, decode, verify time-bound IDs.
 
 ## Quick Start
 
-**Flow:** `connectorId` → instance → `hashId` → request → decode → verify.
+**Flow:** `connectorId` → hashId → instance → request → decode → verify.
 
 ```typescript
-import Trustless from '@neabyte/trustless-id'
+import trustless from '@neabyte/trustless-id'
 
 // Connector ID (same on both sides)
 const connectorId = 'trustless://auth/example.com:0.1.0?service=none'
-const instance = Trustless.create(connectorId)
 
 // One-time hashId per session
-const hashId = Trustless.getHash(connectorId)
+const hashId = trustless.generate(connectorId)
 
-// Request with 10s expiry window
+// Instance for connector (same on client and verifier)
+const instance = trustless.create(connectorId)
+
+// Request with 10s expiry window; send requestId to verifier (QR / link / form)
 const requestId = instance.request(hashId, 10)
 
 // Decode to code, or null if invalid/expired
@@ -41,18 +43,19 @@ if (codeId !== null) {
 
 ## Flow Overview
 
-1. **Connector** — Both client and verifier use the same `connectorId` (e.g. service URL). Each creates `Trustless.create(connectorId)`.
-2. **Hash** — Client calls `Trustless.getHash(connectorId)` once per session; returns a 197-char hex `hashId` (unique per call).
-3. **Request** — Client calls `instance.request(hashId, expireTime?)` to get `requestId` (encoded payload with time slot and window). Send `requestId` (e.g. QR, link, form).
-4. **Decode** — Verifier has `hashId` (e.g. stored or passed with the request). Verifier calls `instance.decode(hashId, requestId)` to get numeric `codeId`, or `null` if invalid/expired.
-5. **Verify** — User enters the code (or it’s shown). Verifier calls `instance.verify(requestId, secret)` with that value; returns `true` when not expired and code matches.
+1. **Connector** — Both client and verifier use the same `connectorId` (e.g. service URL).
+2. **Hash** — Client calls `trustless.generate(connectorId)` once per session; returns a 197-char hex `hashId` (unique per call). This is the session identifier.
+3. **Instance** — Both sides call `trustless.create(connectorId)` to get an instance bound to that connector.
+4. **Request** — Client calls `instance.request(hashId, expireTime?)` to get `requestId`. Send `requestId` and `hashId` to the verifier (e.g. QR, link, form).
+5. **Decode** — Verifier calls `instance.decode(hashId, requestId)` to get numeric `codeId`, or `null` if invalid/expired. Verifier must use the same `hashId` received from the client.
+6. **Verify** — User enters the code (or it’s shown). Verifier calls `instance.verify(requestId, secret)`; returns `true` when not expired and code matches.
 
 ## Methods Overview
 
 | Method                                                                       | Type     | Returns          | Description                                       |
 | :--------------------------------------------------------------------------- | :------- | :--------------- | :------------------------------------------------ |
-| [`Trustless.create(connectorId)`](#trustlesscreateconnectorid)               | static   | `Trustless`      | Factory: new instance bound to connector.         |
-| [`Trustless.getHash(connectorId)`](#trustlessgethashconnectorid)             | static   | `HashId`         | One-time 197-char hex hash.                       |
+| [`trustless.create(connectorId)`](#trustlesscreateconnectorid)               | static   | instance         | Factory: new instance bound to connector.         |
+| [`trustless.generate(connectorId)`](#trustlessgenerateconnectorid)           | static   | `HashId`         | One-time 197-char hex hash.                       |
 | [`instance.request(hashId, expireTime?)`](#instancerequesthashid-expiretime) | instance | `RequestId`      | Encoded payload string or `''` if hashId invalid. |
 | [`instance.decode(hashId, requestId)`](#instancedecodehashid-requestid)      | instance | `CodeId \| null` | Numeric code when valid and not expired.          |
 | [`instance.verify(requestId, secret)`](#instanceverifyrequestid-secret)      | instance | `boolean`        | True when not expired and secret matches code.    |
@@ -60,47 +63,47 @@ if (codeId !== null) {
 ## ConnectorId and HashId
 
 - **ConnectorId** — Any non-secret string that identifies the connector (e.g. `trustless://auth/example.com:0.1.0?service=none`). Trimmed before hashing. Same value on both sides yields the same encryption key.
-- **HashId** — 197 lowercase hex chars from `Trustless.getHash(connectorId)`. Includes timestamp and random nonce; different on every call. Must be passed to `request` and (on verifier side) to `decode` for the same session.
+- **HashId** — 197 lowercase hex chars from `trustless.generate(connectorId)`. Includes timestamp and random nonce; different on every call. Client must pass `hashId` together with `requestId` to the verifier so the verifier can call `decode(hashId, requestId)`.
 
-```typescript
-const hashId = Trustless.getHash(connectorId)
-// hashId.length === 197, /^[0-9a-f]{197}$/.test(hashId) === true
-```
+  ```typescript
+  const hashId = trustless.generate(connectorId)
+  // hashId.length === 197, /^[0-9a-f]{197}$/.test(hashId) === true
+  ```
 
 ## Request and Expiry
 
 - **request(hashId, expireTime?)** — Validates `hashId` (197 hex chars), then encodes `hashId` + current time slot + window. Returns fixed-length `RequestId` or `''` if `hashId` invalid.
 - **expireTime** — Window in seconds (1–60). Default 10. Clamped via `Cipher.clampWindow`. Same `hashId` and same window in the same time slot yields the same `requestId` and same `codeId`.
 
-```typescript
-const requestId = instance.request(hashId, 10)
-const requestIdLong = instance.request(hashId, 60)
-// requestId length: 6 (slot) + 2 (window) + 197 (hashId) = 205
-```
+  ```typescript
+  const requestId = instance.request(hashId, 10)
+  const requestIdLong = instance.request(hashId, 60)
+  // requestId length: 6 (slot) + 2 (window) + 197 (hashId) = 205
+  ```
 
 ## Decode and Verify
 
 - **decode(hashId, requestId)** — Decodes with instance key; checks expiry; ensures payload `hashId` matches argument; returns derived numeric code or `null`. Code is in range `0`–`1e10`.
 - **verify(requestId, secret)** — Decodes, checks expiry, derives expected code, compares to `secret`. `secret` can be number or string (digits only); returns `true` when match and not expired.
 
-```typescript
-const codeId = instance.decode(hashId, requestId)
-if (codeId !== null) {
-  instance.verify(requestId, codeId) === true
-  instance.verify(requestId, String(codeId)) === true
-}
-```
+  ```typescript
+  const codeId = instance.decode(hashId, requestId)
+  if (codeId !== null) {
+    instance.verify(requestId, codeId) === true
+    instance.verify(requestId, String(codeId)) === true
+  }
+  ```
 
 ## API Reference
 
-### Trustless.create(connectorId)
+### trustless.create(connectorId)
 
 Create an instance bound to the given connector. The instance key is a hash of the trimmed `connectorId`.
 
 - `connectorId` `<ConnectorId>`: Caller identifier (string, trimmed).
-- Returns: `<Trustless>` New instance.
+- Returns: New instance (use for `request`, `decode`, `verify`).
 
-### Trustless.getHash(connectorId)
+### trustless.generate(connectorId)
 
 Generate a one-time 197-char hex hash. Uses connectorId + timestamp + random nonce. Call once per session; each call returns a different value.
 
@@ -111,7 +114,7 @@ Generate a one-time 197-char hex hash. Uses connectorId + timestamp + random non
 
 Build the encoded request payload for the given hash and optional expiry window.
 
-- `hashId` `<HashId>`: 197-char hex from `getHash`.
+- `hashId` `<HashId>`: 197-char hex from `generate`.
 - `expireTime` `<ExpireTime | undefined>`: Window in seconds (1–60). Default 10.
 - Returns: `<RequestId>` Encoded string of length 205, or `''` if `hashId` invalid.
 
@@ -136,7 +139,7 @@ Check that the user-provided secret matches the derived code and the payload is 
 Types are exported for TypeScript: `import type { CodeId, ConnectorId, DecodedPayload, ExpireTime, HashId, RequestId, VerifySecret } from '@neabyte/trustless-id'`.
 
 - **ConnectorId:** `<string>` — Caller identifier.
-- **HashId:** `<string>` — 197-char hex from `getHash`.
+- **HashId:** `<string>` — 197-char hex from `generate`.
 - **RequestId:** `<string>` — Encoded payload from `request`.
 - **CodeId:** `<number>` — Numeric code from `decode` (0–1e10).
 - **ExpireTime:** `<number>` — Window in seconds (1–60).

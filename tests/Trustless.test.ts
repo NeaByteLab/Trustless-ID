@@ -19,7 +19,7 @@ Deno.test('Trustless - create returns instance', () => {
 Deno.test('Trustless - decode returns integer CodeId when successful', () => {
   const connectorId = makeConnectorId('example.com')
   const instance = Trustless.create(connectorId)
-  const hashId = Trustless.getHash(connectorId)
+  const hashId = Trustless.generate(connectorId)
   const requestId = instance.request(hashId, 10)
   const codeId = instance.decode(hashId, requestId)
   assert(codeId !== null)
@@ -27,9 +27,9 @@ Deno.test('Trustless - decode returns integer CodeId when successful', () => {
   assertEquals(Number.isInteger(codeId), true)
 })
 
-Deno.test('Trustless - empty connectorId create and getHash produce valid flow', () => {
+Deno.test('Trustless - empty connectorId create and generate produce valid flow', () => {
   const instance = Trustless.create('')
-  const hashId = Trustless.getHash('')
+  const hashId = Trustless.generate('')
   assertEquals(hashId.length, hashHexLen)
   assertEquals(/^[0-9a-f]{197}$/.test(hashId), true)
   const requestId = instance.request(hashId, 10)
@@ -42,7 +42,7 @@ Deno.test('Trustless - empty connectorId create and getHash produce valid flow',
 Deno.test('Trustless - full flow decode returns code and verify succeeds', () => {
   const connectorId = makeConnectorId('example.com')
   const instance = Trustless.create(connectorId)
-  const hashId = Trustless.getHash(connectorId)
+  const hashId = Trustless.generate(connectorId)
   const requestId = instance.request(hashId, 10)
   const codeId = instance.decode(hashId, requestId)
   assert(codeId !== null)
@@ -50,22 +50,22 @@ Deno.test('Trustless - full flow decode returns code and verify succeeds', () =>
   assertEquals(verified, true)
 })
 
-Deno.test('Trustless - getHash different connectorIds returns different hashId', () => {
-  const hashA = Trustless.getHash(makeConnectorId('a.com'))
-  const hashB = Trustless.getHash(makeConnectorId('b.com'))
+Deno.test('Trustless - generate different connectorIds returns different hashId', () => {
+  const hashA = Trustless.generate(makeConnectorId('a.com'))
+  const hashB = Trustless.generate(makeConnectorId('b.com'))
   assertEquals(hashA !== hashB, true)
 })
 
-Deno.test('Trustless - getHash produces different hashes on each call', () => {
+Deno.test('Trustless - generate produces different hashes on each call', () => {
   const connectorId = makeConnectorId('example.com')
-  const a = Trustless.getHash(connectorId)
-  const b = Trustless.getHash(connectorId)
+  const a = Trustless.generate(connectorId)
+  const b = Trustless.generate(connectorId)
   assertEquals(a !== b, true)
 })
 
-Deno.test('Trustless - getHash returns 197-char hex', () => {
+Deno.test('Trustless - generate returns 197-char hex', () => {
   const connectorId = makeConnectorId('example.com')
-  const hashId = Trustless.getHash(connectorId)
+  const hashId = Trustless.generate(connectorId)
   assertEquals(hashId.length, hashHexLen)
   assertEquals(/^[0-9a-f]{197}$/.test(hashId), true)
 })
@@ -73,7 +73,7 @@ Deno.test('Trustless - getHash returns 197-char hex', () => {
 Deno.test('Trustless - invariant verify true when code from decode and not expired', () => {
   const connectorId = makeConnectorId('example.com')
   const instance = Trustless.create(connectorId)
-  const hashId = Trustless.getHash(connectorId)
+  const hashId = Trustless.generate(connectorId)
   const requestId = instance.request(hashId, 10)
   const codeId = instance.decode(hashId, requestId)
   assert(codeId !== null)
@@ -83,7 +83,7 @@ Deno.test('Trustless - invariant verify true when code from decode and not expir
 Deno.test('Trustless - request returns fixed-length requestId', () => {
   const connectorId = makeConnectorId('example.com')
   const instance = Trustless.create(connectorId)
-  const hashId = Trustless.getHash(connectorId)
+  const hashId = Trustless.generate(connectorId)
   const requestId = instance.request(hashId, 10)
   assertEquals(requestId.length, 6 + 2 + hashHexLen)
 })
@@ -91,7 +91,7 @@ Deno.test('Trustless - request returns fixed-length requestId', () => {
 Deno.test('Trustless - request uses default expireTime when omitted', () => {
   const connectorId = makeConnectorId('example.com')
   const instance = Trustless.create(connectorId)
-  const hashId = Trustless.getHash(connectorId)
+  const hashId = Trustless.generate(connectorId)
   const requestId = instance.request(hashId)
   assert(requestId.length > 0)
   const codeId = instance.decode(hashId, requestId)
@@ -103,7 +103,7 @@ Deno.test(
   () => {
     const connectorId = makeConnectorId('example.com')
     const instance = Trustless.create(connectorId)
-    const hashId = Trustless.getHash(connectorId)
+    const hashId = Trustless.generate(connectorId)
     const requestId = instance.request(hashId, 60)
     assertEquals(requestId.length, 6 + 2 + hashHexLen)
     const codeId = instance.decode(hashId, requestId)
@@ -114,7 +114,7 @@ Deno.test(
 Deno.test('Trustless - request with explicit undefined expireTime uses default window', () => {
   const connectorId = makeConnectorId('example.com')
   const instance = Trustless.create(connectorId)
-  const hashId = Trustless.getHash(connectorId)
+  const hashId = Trustless.generate(connectorId)
   const requestId = instance.request(hashId, undefined)
   assertEquals(requestId.length, 6 + 2 + hashHexLen)
   const codeId = instance.decode(hashId, requestId)
@@ -124,7 +124,7 @@ Deno.test('Trustless - request with explicit undefined expireTime uses default w
 Deno.test('Trustless - requestId contains only output alphabet characters', () => {
   const connectorId = makeConnectorId('example.com')
   const instance = Trustless.create(connectorId)
-  const hashId = Trustless.getHash(connectorId)
+  const hashId = Trustless.generate(connectorId)
   const requestId = instance.request(hashId, 10)
   const outputAlphabet = /^[0-9a-zA-Z_-]{205}$/
   assertEquals(outputAlphabet.test(requestId), true)
@@ -135,7 +135,7 @@ Deno.test(
   () => {
     const connectorId = makeConnectorId('example.com')
     const instance = Trustless.create(connectorId)
-    const hashId = Trustless.getHash(connectorId)
+    const hashId = Trustless.generate(connectorId)
     const requestId1 = instance.request(hashId, 60)
     const requestId2 = instance.request(hashId, 60)
     const code1 = instance.decode(hashId, requestId1)
@@ -150,7 +150,7 @@ Deno.test('Trustless - two instances with same connectorId can decode each other
   const connectorId = makeConnectorId('example.com')
   const instance1 = Trustless.create(connectorId)
   const instance2 = Trustless.create(connectorId)
-  const hashId = Trustless.getHash(connectorId)
+  const hashId = Trustless.generate(connectorId)
   const requestId = instance1.request(hashId, 10)
   const codeFrom2 = instance2.decode(hashId, requestId)
   assert(codeFrom2 !== null)
@@ -160,7 +160,7 @@ Deno.test('Trustless - two instances with same connectorId can decode each other
 Deno.test('Trustless - verify with number secret succeeds when code matches', () => {
   const connectorId = makeConnectorId('test.com')
   const instance = Trustless.create(connectorId)
-  const hashId = Trustless.getHash(connectorId)
+  const hashId = Trustless.generate(connectorId)
   const requestId = instance.request(hashId, 10)
   const codeId = instance.decode(hashId, requestId)
   assert(codeId !== null)
@@ -170,7 +170,7 @@ Deno.test('Trustless - verify with number secret succeeds when code matches', ()
 Deno.test('Trustless - verify with string digits succeeds when code matches', () => {
   const connectorId = makeConnectorId('test.com')
   const instance = Trustless.create(connectorId)
-  const hashId = Trustless.getHash(connectorId)
+  const hashId = Trustless.generate(connectorId)
   const requestId = instance.request(hashId, 10)
   const codeId = instance.decode(hashId, requestId)
   assert(codeId !== null)

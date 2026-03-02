@@ -1,11 +1,15 @@
 /** Connector identifier from caller. */
 export type ConnectorId = string
-/** 197-char hex hash from getHash. */
+
+/** 197-char hex hash from generate. */
 export type HashId = string
+
 /** Encoded payload string from request. */
 export type RequestId = string
+
 /** Numeric code from decode for verification. */
 export type CodeId = number
+
 /** Expiry window in seconds (1–60). */
 export type ExpireTime = number
 

@@ -18,7 +18,7 @@ Deno.test('EdgeCases - connectorId with whitespace is trimmed', () => {
   const connectorId = makeConnectorId('example.com')
   const withSpaces = '  ' + connectorId + '  '
   const instance = Trustless.create(withSpaces)
-  const hashId = Trustless.getHash(connectorId)
+  const hashId = Trustless.generate(connectorId)
   const requestId = instance.request(hashId, 10)
   const codeId = instance.decode(hashId, requestId)
   assertEquals(codeId !== null, true)
@@ -28,7 +28,7 @@ Deno.test('EdgeCases - connectorId with whitespace is trimmed', () => {
 Deno.test('EdgeCases - decode with empty hashId string still validates by hashId match', () => {
   const connectorId = makeConnectorId('example.com')
   const instance = Trustless.create(connectorId)
-  const hashId = Trustless.getHash(connectorId)
+  const hashId = Trustless.generate(connectorId)
   const requestId = instance.request(hashId, 10)
   const codeId = instance.decode('', requestId)
   assertEquals(codeId, null)
@@ -49,7 +49,7 @@ Deno.test('EdgeCases - isExpired with invalid requestId returns true', () => {
 Deno.test('EdgeCases - request clamps expireTime to valid range', () => {
   const connectorId = makeConnectorId('example.com')
   const instance = Trustless.create(connectorId)
-  const hashId = Trustless.getHash(connectorId)
+  const hashId = Trustless.generate(connectorId)
   const requestIdZero = instance.request(hashId, 0)
   const requestIdHuge = instance.request(hashId, 999)
   assert(requestIdZero.length > 0)
@@ -80,7 +80,7 @@ Deno.test(
   () => {
     const connectorId = makeConnectorId('example.com')
     const instance = Trustless.create(connectorId)
-    const hashId = Trustless.getHash(connectorId)
+    const hashId = Trustless.generate(connectorId)
     const requestId = instance.request(hashId, Number.NaN)
     assertEquals(requestId.length, 205)
     const codeId = instance.decode(hashId, requestId)
@@ -94,7 +94,7 @@ Deno.test(
   () => {
     const connectorId = makeConnectorId('example.com')
     const instance = Trustless.create(connectorId)
-    const hashId = Trustless.getHash(connectorId)
+    const hashId = Trustless.generate(connectorId)
     const requestId = instance.request(hashId, -5)
     assertEquals(requestId.length, 205)
     const codeId = instance.decode(hashId, requestId)
@@ -105,7 +105,7 @@ Deno.test(
 Deno.test('EdgeCases - verify NaN secret returns false', () => {
   const connectorId = makeConnectorId('example.com')
   const instance = Trustless.create(connectorId)
-  const hashId = Trustless.getHash(connectorId)
+  const hashId = Trustless.generate(connectorId)
   const requestId = instance.request(hashId, 10)
   assertEquals(instance.verify(requestId, Number.NaN), false)
 })
@@ -113,7 +113,7 @@ Deno.test('EdgeCases - verify NaN secret returns false', () => {
 Deno.test('EdgeCases - verify with string leading zeros strips and validates', () => {
   const connectorId = makeConnectorId('example.com')
   const instance = Trustless.create(connectorId)
-  const hashId = Trustless.getHash(connectorId)
+  const hashId = Trustless.generate(connectorId)
   const requestId = instance.request(hashId, 10)
   const codeId = instance.decode(hashId, requestId)
   assert(codeId !== null)
@@ -124,7 +124,7 @@ Deno.test('EdgeCases - verify with string leading zeros strips and validates', (
 Deno.test('EdgeCases - verify with string non-numeric secret returns false', () => {
   const connectorId = makeConnectorId('example.com')
   const instance = Trustless.create(connectorId)
-  const hashId = Trustless.getHash(connectorId)
+  const hashId = Trustless.generate(connectorId)
   const requestId = instance.request(hashId, 10)
   assertEquals(instance.verify(requestId, 'no-digits'), false)
   assertEquals(instance.verify(requestId, ''), false)
@@ -133,7 +133,7 @@ Deno.test('EdgeCases - verify with string non-numeric secret returns false', () 
 Deno.test('EdgeCases - verify with string secret strips non-digits and validates', () => {
   const connectorId = makeConnectorId('example.com')
   const instance = Trustless.create(connectorId)
-  const hashId = Trustless.getHash(connectorId)
+  const hashId = Trustless.generate(connectorId)
   const requestId = instance.request(hashId, 10)
   const codeId = instance.decode(hashId, requestId)
   assert(codeId !== null)

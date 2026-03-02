@@ -37,26 +37,28 @@ deno add jsr:@neabyte/trustless-id
 
 ## Quick Start
 
-Create an instance with a **connector ID** (e.g. service URL or app identifier). Generate a one-time **hashId**, build a **requestId**, then decode to a numeric code or verify with a user secret.
+Use a **connector ID** (e.g. service URL or app identifier) on both sides. Generate a one-time **hashId**, create an **instance**, build a **requestId**, then decode to a numeric code or verify with a user secret.
 
 ```typescript
-import Trustless from '@neabyte/trustless-id'
+import trustless from '@neabyte/trustless-id'
 
 // Connector ID (same on both sides)
 const connectorId = 'trustless://auth/example.com:0.1.0?service=none'
-const instance = Trustless.create(connectorId)
 
 // One-time hashId per session
-const hashId = Trustless.getHash(connectorId)
+const hashId = trustless.generate(connectorId)
 
-// Request with 10s expiry window
+// Instance for connector (same on client and verifier)
+const instance = trustless.create(connectorId)
+
+// Build payload; send requestId to verifier (QR / link / form)
 const requestId = instance.request(hashId, 10)
 
-// Decode to code, or null if invalid/expired
+// Verifier decodes to get code
 const codeId = instance.decode(hashId, requestId)
 if (codeId !== null) {
   console.log('Code:', codeId)
-  // Verify user secret
+  // Check user secret
   console.log('Verify:', instance.verify(requestId, codeId))
 }
 ```

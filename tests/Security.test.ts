@@ -12,7 +12,7 @@ function makeConnectorId(domain: string): string {
 Deno.test('Security - connectorId very long create and request succeed', () => {
   const longConnectorId = 'x'.repeat(50_000)
   const instance = Trustless.create(longConnectorId)
-  const hashId = Trustless.getHash(longConnectorId)
+  const hashId = Trustless.generate(longConnectorId)
   const requestId = instance.request(hashId, 10)
   assertEquals(requestId.length, rawLen)
   const codeId = instance.decode(hashId, requestId)
@@ -23,7 +23,7 @@ Deno.test('Security - connectorId very long create and request succeed', () => {
 Deno.test('Security - decode returns CodeId in range 0 to 1e10', () => {
   const connectorId = makeConnectorId('example.com')
   const instance = Trustless.create(connectorId)
-  const hashId = Trustless.getHash(connectorId)
+  const hashId = Trustless.generate(connectorId)
   const requestId = instance.request(hashId, 10)
   const codeId = instance.decode(hashId, requestId)
   assert(codeId !== null)
@@ -34,8 +34,8 @@ Deno.test('Security - decode returns CodeId in range 0 to 1e10', () => {
 Deno.test('Security - decode with wrong hashId returns null', () => {
   const connectorId = makeConnectorId('example.com')
   const instance = Trustless.create(connectorId)
-  const hashIdReal = Trustless.getHash(connectorId)
-  const hashIdFake = Trustless.getHash('other-connector')
+  const hashIdReal = Trustless.generate(connectorId)
+  const hashIdFake = Trustless.generate('other-connector')
   const requestId = instance.request(hashIdReal, 10)
   const codeId = instance.decode(hashIdFake, requestId)
   assertEquals(codeId, null)
@@ -54,8 +54,8 @@ Deno.test(
     const connectorB = makeConnectorId('domain-b.com')
     const instanceA = Trustless.create(connectorA)
     const instanceB = Trustless.create(connectorB)
-    const hashIdA = Trustless.getHash(connectorA)
-    const hashIdB = Trustless.getHash(connectorB)
+    const hashIdA = Trustless.generate(connectorA)
+    const hashIdB = Trustless.generate(connectorB)
     const requestIdB = instanceB.request(hashIdB, 10)
     const codeFromAWithBRequest = instanceA.decode(hashIdA, requestIdB)
     assertEquals(codeFromAWithBRequest, null)
@@ -67,7 +67,7 @@ Deno.test(
 Deno.test('Security - random string as requestId decode returns null', () => {
   const connectorId = makeConnectorId('example.com')
   const instance = Trustless.create(connectorId)
-  const hashId = Trustless.getHash(connectorId)
+  const hashId = Trustless.generate(connectorId)
   const randomRequestId = 'a'.repeat(rawLen)
   const codeId = instance.decode(hashId, randomRequestId)
   assertEquals(codeId, null)
@@ -82,7 +82,7 @@ Deno.test('Security - random string as requestId verify returns false', () => {
 Deno.test('Security - replay of old requestId after window decode returns null', async () => {
   const connectorId = makeConnectorId('replay.com')
   const instance = Trustless.create(connectorId)
-  const hashId = Trustless.getHash(connectorId)
+  const hashId = Trustless.generate(connectorId)
   const requestId = instance.request(hashId, 1)
   const codeId = instance.decode(hashId, requestId)
   assert(codeId !== null)
@@ -94,7 +94,7 @@ Deno.test('Security - replay of old requestId after window decode returns null',
 Deno.test('Security - replay of old requestId after window verify returns false', async () => {
   const connectorId = makeConnectorId('replay-verify.com')
   const instance = Trustless.create(connectorId)
-  const hashId = Trustless.getHash(connectorId)
+  const hashId = Trustless.generate(connectorId)
   const requestId = instance.request(hashId, 1)
   const codeId = instance.decode(hashId, requestId)
   assert(codeId !== null)
@@ -107,7 +107,7 @@ Deno.test('Security - requestId from connector A cannot be decoded by connector 
   const connectorB = makeConnectorId('domain-b.com')
   const instanceA = Trustless.create(connectorA)
   const instanceB = Trustless.create(connectorB)
-  const hashId = Trustless.getHash(connectorA)
+  const hashId = Trustless.generate(connectorA)
   const requestId = instanceA.request(hashId, 10)
   const codeFromB = instanceB.decode(hashId, requestId)
   assertEquals(codeFromB, null)
@@ -116,7 +116,7 @@ Deno.test('Security - requestId from connector A cannot be decoded by connector 
 Deno.test('Security - requestId length 204 decode returns null', () => {
   const connectorId = makeConnectorId('example.com')
   const instance = Trustless.create(connectorId)
-  const hashId = Trustless.getHash(connectorId)
+  const hashId = Trustless.generate(connectorId)
   assertEquals(instance.decode(hashId, 'x'.repeat(204)), null)
 })
 
@@ -129,7 +129,7 @@ Deno.test('Security - requestId length 204 verify returns false', () => {
 Deno.test('Security - requestId length 206 decode returns null', () => {
   const connectorId = makeConnectorId('example.com')
   const instance = Trustless.create(connectorId)
-  const hashId = Trustless.getHash(connectorId)
+  const hashId = Trustless.generate(connectorId)
   assertEquals(instance.decode(hashId, 'x'.repeat(206)), null)
 })
 
@@ -144,7 +144,7 @@ Deno.test(
   () => {
     const connectorId = makeConnectorId('example.com')
     const instance = Trustless.create(connectorId)
-    const hashId = Trustless.getHash(connectorId)
+    const hashId = Trustless.generate(connectorId)
     const malformed = '!!!!!!' + '01' + 'z'.repeat(hashHexLen)
     assertEquals(malformed.length, rawLen)
     assertEquals(instance.decode(hashId, malformed), null)
@@ -164,7 +164,7 @@ Deno.test(
 Deno.test('Security - reusing requestId with correct hashId and code still verifies', () => {
   const connectorId = makeConnectorId('example.com')
   const instance = Trustless.create(connectorId)
-  const hashId = Trustless.getHash(connectorId)
+  const hashId = Trustless.generate(connectorId)
   const requestId = instance.request(hashId, 10)
   const codeId = instance.decode(hashId, requestId)
   assert(codeId !== null)
@@ -175,7 +175,7 @@ Deno.test('Security - reusing requestId with correct hashId and code still verif
 Deno.test('Security - tampered requestId decode returns null', () => {
   const connectorId = makeConnectorId('example.com')
   const instance = Trustless.create(connectorId)
-  const hashId = Trustless.getHash(connectorId)
+  const hashId = Trustless.generate(connectorId)
   const requestId = instance.request(hashId, 10)
   const tampered = requestId.slice(0, 10) + 'X' + requestId.slice(11)
   const codeId = instance.decode(hashId, tampered)
@@ -185,7 +185,7 @@ Deno.test('Security - tampered requestId decode returns null', () => {
 Deno.test('Security - tampered requestId verify returns false', () => {
   const connectorId = makeConnectorId('example.com')
   const instance = Trustless.create(connectorId)
-  const hashId = Trustless.getHash(connectorId)
+  const hashId = Trustless.generate(connectorId)
   const requestId = instance.request(hashId, 10)
   const codeId = instance.decode(hashId, requestId)
   assert(codeId !== null)
@@ -196,8 +196,8 @@ Deno.test('Security - tampered requestId verify returns false', () => {
 Deno.test('Security - two different hashIds same connector decode only with own requestId', () => {
   const connectorId = makeConnectorId('example.com')
   const instance = Trustless.create(connectorId)
-  const hashId1 = Trustless.getHash(connectorId)
-  const hashId2 = Trustless.getHash(connectorId)
+  const hashId1 = Trustless.generate(connectorId)
+  const hashId2 = Trustless.generate(connectorId)
   assert(hashId1 !== hashId2)
   const requestId1 = instance.request(hashId1, 10)
   const requestId2 = instance.request(hashId2, 10)
@@ -214,7 +214,7 @@ Deno.test(
     const connectorB = makeConnectorId('domain-b.com')
     const instanceA = Trustless.create(connectorA)
     const instanceB = Trustless.create(connectorB)
-    const hashId = Trustless.getHash(connectorA)
+    const hashId = Trustless.generate(connectorA)
     const requestId = instanceA.request(hashId, 10)
     const codeId = instanceA.decode(hashId, requestId)
     assert(codeId !== null)
@@ -226,7 +226,7 @@ Deno.test(
 Deno.test('Security - verify with wrong secret returns false', () => {
   const connectorId = makeConnectorId('example.com')
   const instance = Trustless.create(connectorId)
-  const hashId = Trustless.getHash(connectorId)
+  const hashId = Trustless.generate(connectorId)
   const requestId = instance.request(hashId, 10)
   const codeId = instance.decode(hashId, requestId)
   assert(codeId !== null)
@@ -237,7 +237,7 @@ Deno.test('Security - verify with wrong secret returns false', () => {
 Deno.test('Security - verify with large wrong secret returns false', () => {
   const connectorId = makeConnectorId('example.com')
   const instance = Trustless.create(connectorId)
-  const hashId = Trustless.getHash(connectorId)
+  const hashId = Trustless.generate(connectorId)
   const requestId = instance.request(hashId, 10)
   assertEquals(instance.verify(requestId, 9999999999), false)
 })
@@ -245,7 +245,7 @@ Deno.test('Security - verify with large wrong secret returns false', () => {
 Deno.test('Security - wrong length requestId decode returns null', () => {
   const connectorId = makeConnectorId('example.com')
   const instance = Trustless.create(connectorId)
-  const hashId = Trustless.getHash(connectorId)
+  const hashId = Trustless.generate(connectorId)
   assertEquals(instance.decode(hashId, ''), null)
   assertEquals(instance.decode(hashId, 'short'), null)
   assertEquals(instance.decode(hashId, 'x'.repeat(rawLen - 1)), null)
