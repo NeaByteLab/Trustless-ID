@@ -15,7 +15,7 @@ Anonymous ID: request, decode, verify time-bound. No server, no storage.
 - **Trustless** — No server or DB; key from a shared identifier (`connectorId`) both sides agree on.
 - **Connector-bound** — Same `connectorId` = same pair; others can’t `decode` or `verify`.
 - **Request, decode, verify** — `request` → `decode` to `codeId` → `verify` with user input (number or digits).
-- **Time-bound** — Payloads expire in 1–60 seconds (configurable).
+- **Time-bound** — Payloads expire automatically and predictably in 1–60 seconds (configurable).
 - **Session ID** — `hashId` can be one-time per session (default) or stable per user for repeated identity proof.
 
 ## Installation
@@ -74,8 +74,8 @@ if (codeId !== null) {
 
 ## Documentation
 
-- **[USAGE.md](USAGE.md)** — Full API, flow, and type reference; how to use the library end-to-end and every method and type.
-- **[USECASE.md](USECASE.md)** — Use cases and scenarios to clarify flow and architecture (actors, channels, secure vs leak conditions).
+- **[USAGE.md](USAGE.md)** — Full API, flow, and type reference; how to use the library end-to-end and every method.
+- **[USECASE.md](USECASE.md)** — Use cases to clarify flow and architecture (actors, channels, secure vs leak conditions).
 
 ## Build & Test
 
