@@ -6,7 +6,7 @@ Anonymous ID: request, decode, verify time-bound. No server, no storage.
 
 [![Node](https://img.shields.io/badge/node-%3E%3D20-339933?logo=node.js&logoColor=white)](https://nodejs.org) [![Deno](https://img.shields.io/badge/deno-compatible-ffcb00?logo=deno&logoColor=000000)](https://deno.com) [![Bun](https://img.shields.io/badge/bun-compatible-f9f1e1?logo=bun&logoColor=000000)](https://bun.sh) [![Browser](https://img.shields.io/badge/browser-compatible-4285F4?logo=googlechrome&logoColor=white)](https://developer.mozilla.org/en-US/docs/Web/JavaScript)
 
-[![Module type: ESM](https://img.shields.io/badge/module%20type-esm-brightgreen)](https://github.com/NeaByteLab/Trustless-ID) [![npm version](https://img.shields.io/npm/v/@neabyte/trustless-id.svg)](https://www.npmjs.org/package/@neabyte/trustless-id) [![JSR](https://jsr.io/badges/@neabyte/trustless-id)](https://jsr.io/@neabyte/trustless-id) [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Module type: ESM](https://img.shields.io/badge/module%20type-esm-brightgreen)](https://github.com/NeaByteLab/Trustless-ID) [![npm version](https://img.shields.io/npm/v/@neabyte/trustless-id.svg)](https://www.npmjs.org/package/@neabyte/trustless-id) [![JSR](https://jsr.io/badges/@neabyte/trustless-id)](https://jsr.io/@neabyte/trustless-id) [![CI](https://github.com/NeaByteLab/Trustless-ID/actions/workflows/ci.yaml/badge.svg)](https://github.com/NeaByteLab/Trustless-ID/actions/workflows/ci.yaml) [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 </div>
 
